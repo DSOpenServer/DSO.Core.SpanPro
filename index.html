@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>DSO.Core.SpanPro — Dokümantasyon</title>
+  <meta name="description" content="SpanPro / ReadOnlySpanPro: Span kullanmadan yüksek performanslı slicing, arama (BMH), kopyalama, karakter-bazlı ToString ve GC-free number formatting." />
+
+  <style>
+    :root{
+      --bg: #0b1020;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.08);
+      --text: rgba(255,255,255,.86);
+      --muted: rgba(255,255,255,.62);
+      --muted2: rgba(255,255,255,.50);
+      --border: rgba(255,255,255,.12);
+      --accent: #7dd3fc;
+      --accent2: #a78bfa;
+      --warn: #fbbf24;
+      --ok: #34d399;
+      --bad: #fb7185;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+      --radius2: 22px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --maxw: 1180px;
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f7f8fb;
+        --panel: rgba(0,0,0,.05);
+        --panel2: rgba(0,0,0,.07);
+        --text: rgba(0,0,0,.85);
+        --muted: rgba(0,0,0,.62);
+        --muted2: rgba(0,0,0,.50);
+        --border: rgba(0,0,0,.12);
+        --shadow: 0 10px 30px rgba(0,0,0,.12);
+      }
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 20% 0%, rgba(125,211,252,.20), transparent 55%),
+        radial-gradient(900px 600px at 90% 30%, rgba(167,139,250,.16), transparent 60%),
+        radial-gradient(700px 500px at 30% 90%, rgba(52,211,153,.12), transparent 60%),
+        var(--bg);
+      line-height:1.55;
+    }
+    a{color:inherit}
+    .wrap{max-width:var(--maxw); margin:0 auto; padding:24px;}
+    .grid{
+      display:grid;
+      grid-template-columns: 310px 1fr;
+      gap:18px;
+      align-items:start;
+    }
+    @media (max-width: 960px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    .card{
+      background:linear-gradient(180deg, var(--panel), transparent 120%);
+      border:1px solid var(--border);
+      border-radius:var(--radius2);
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .side{
+      position:sticky;
+      top:18px;
+      padding:16px;
+    }
+    @media (max-width: 960px){
+      .side{position:relative; top:0}
+    }
+
+    .brand{
+      display:flex; gap:12px; align-items:center; padding:10px 12px;
+      border-radius:14px;
+      background: linear-gradient(135deg, rgba(125,211,252,.14), rgba(167,139,250,.12));
+      border:1px solid var(--border);
+    }
+    .logo{
+      width:40px; height:40px; border-radius:14px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(125,211,252,.9), rgba(125,211,252,.25) 45%, transparent 55%),
+        radial-gradient(circle at 70% 70%, rgba(167,139,250,.9), rgba(167,139,250,.20) 45%, transparent 55%),
+        rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      display:grid; place-items:center;
+      font-weight:800;
+    }
+    .brand h1{margin:0; font-size:16px; letter-spacing:.2px}
+    .brand p{margin:0; font-size:12px; color:var(--muted)}
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+    .btn{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:9px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      text-decoration:none;
+      font-size:13px;
+    }
+    .btn:hover{background: rgba(255,255,255,.10)}
+    .btn .dot{
+      width:8px; height:8px; border-radius:999px; background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(125,211,252,.18);
+    }
+    .btn.secondary .dot{background: var(--accent2); box-shadow: 0 0 0 4px rgba(167,139,250,.16);}
+
+    .nav{
+      margin-top:14px;
+      padding:10px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+    }
+    .nav h3{margin:0 0 8px; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.12em}
+    .nav a{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:8px 10px;
+      border-radius:12px;
+      text-decoration:none;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .nav a:hover{background: rgba(255,255,255,.07); color:var(--text)}
+    .nav a.active{background: rgba(125,211,252,.12); color:var(--text); border:1px solid rgba(125,211,252,.22)}
+    .kbd{
+      font-family:var(--mono);
+      font-size:11px;
+      padding:2px 6px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color:var(--muted2);
+    }
+
+    .main{
+      padding:22px;
+    }
+
+    .hero{
+      padding:18px;
+      border-radius:20px;
+      border:1px solid var(--border);
+      background:
+        radial-gradient(700px 260px at 20% 0%, rgba(125,211,252,.18), transparent 65%),
+        radial-gradient(600px 260px at 85% 20%, rgba(167,139,250,.14), transparent 60%),
+        rgba(255,255,255,.04);
+      margin-bottom:16px;
+    }
+    .hero h2{
+      margin:0 0 6px;
+      font-size:28px;
+      letter-spacing:-.02em;
+    }
+    .hero p{margin:0; color:var(--muted)}
+    .badges{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
+    .badge{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+    }
+    .badge.ok{border-color: rgba(52,211,153,.25); background: rgba(52,211,153,.08); color: rgba(52,211,153,.95)}
+    .badge.warn{border-color: rgba(251,191,36,.25); background: rgba(251,191,36,.08); color: rgba(251,191,36,.95)}
+    .badge.acc{border-color: rgba(125,211,252,.25); background: rgba(125,211,252,.08); color: rgba(125,211,252,.95)}
+
+    section{
+      margin:18px 0;
+      padding:18px;
+      border-radius:20px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+    }
+    section h3{
+      margin:0 0 10px;
+      font-size:18px;
+      letter-spacing:-.01em;
+    }
+    section p{margin:10px 0; color:var(--text)}
+    .muted{color:var(--muted)}
+    .list{
+      margin:10px 0 0;
+      padding-left:18px;
+      color:var(--text);
+    }
+    .list li{margin:6px 0; color:var(--muted)}
+    .list li b{color:var(--text)}
+    .callout{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+    }
+    .callout.ok{border-color: rgba(52,211,153,.25); background: rgba(52,211,153,.08)}
+    .callout.warn{border-color: rgba(251,191,36,.28); background: rgba(251,191,36,.08)}
+    .callout.bad{border-color: rgba(251,113,133,.28); background: rgba(251,113,133,.08)}
+    .callout code{font-family:var(--mono); color:var(--text)}
+    code.inline{
+      font-family:var(--mono);
+      font-size:.95em;
+      padding:2px 6px;
+      border-radius:9px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+    }
+
+    pre{
+      margin:12px 0 0;
+      border-radius:18px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.30);
+      overflow:auto;
+      padding:14px 14px;
+    }
+    @media (prefers-color-scheme: light){
+      pre{background: rgba(0,0,0,.06)}
+    }
+    pre code{
+      font-family:var(--mono);
+      font-size:13px;
+      color: var(--text);
+      display:block;
+      white-space:pre;
+    }
+
+    .cols{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+    @media (max-width: 880px){ .cols{grid-template-columns:1fr} }
+
+    .footer{
+      margin-top:18px;
+      padding:16px;
+      border-radius:20px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size:13px;
+      display:flex;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+    .hr{height:1px; background: var(--border); margin:14px 0;}
+    .mini{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+    .pill{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+    }
+    .topbar{
+      display:none;
+      position:sticky;
+      top:0;
+      z-index:50;
+      padding:10px 12px;
+      background: rgba(10,14,28,.75);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--border);
+    }
+    @media (prefers-color-scheme: light){
+      .topbar{background: rgba(250,250,252,.86)}
+    }
+    @media (max-width: 960px){
+      .topbar{display:flex; justify-content:space-between; align-items:center}
+      .topbar button{
+        border:1px solid var(--border);
+        background: rgba(255,255,255,.06);
+        color: var(--text);
+        padding:8px 10px;
+        border-radius:12px;
+        font-size:13px;
+        cursor:pointer;
+      }
+      .side{display:none}
+      .side.open{display:block}
+    }
+
+    .tip{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px; color:var(--muted);
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      padding:6px 10px;
+      border-radius:999px;
+      margin-top:10px;
+    }
+    .tip i{
+      width:18px; height:18px; border-radius:999px;
+      display:grid; place-items:center;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      font-style:normal;
+      color: var(--accent);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="logo" aria-hidden="true">SP</div>
+      <div style="display:flex;flex-direction:column;line-height:1.1">
+        <b style="font-size:13px">DSO.Core.SpanPro</b>
+        <span style="font-size:12px;color:var(--muted)">Docs</span>
+      </div>
+    </div>
+    <button id="menuBtn" type="button">Menü</button>
+  </div>
+
+  <div class="wrap">
+    <div class="grid">
+      <!-- SIDEBAR -->
+      <aside class="card side" id="side">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">SP</div>
+          <div>
+            <h1>DSO.Core.SpanPro</h1>
+            <p>Span’sız, çoklu backing’li slicing & metin üretimi</p>
+          </div>
+        </div>
+
+        <div class="btnrow">
+          <a class="btn" href="https://github.com/DSOpenServer/DSO.Core.SpanPro" target="_blank" rel="noopener">
+            <span class="dot" aria-hidden="true"></span> Repo
+          </a>
+          <a class="btn secondary" href="https://github.com/DSOpenServer" target="_blank" rel="noopener">
+            <span class="dot" aria-hidden="true"></span> DSOpenServer Org
+          </a>
+        </div>
+
+        <div class="nav" id="nav">
+          <h3>İçindekiler</h3>
+          <a href="#overview"><span>Genel Bakış</span><span class="kbd">1</span></a>
+          <a href="#why"><span>Neden SpanPro?</span><span class="kbd">2</span></a>
+          <a href="#features"><span>Özellikler</span><span class="kbd">3</span></a>
+          <a href="#architecture"><span>Mimari</span><span class="kbd">4</span></a>
+          <a href="#safety"><span>Semantik & Güvenlik</span><span class="kbd">5</span></a>
+          <a href="#tostring"><span>ToString Semantiği</span><span class="kbd">6</span></a>
+          <a href="#quickstart"><span>Hızlı Başlangıç</span><span class="kbd">7</span></a>
+          <a href="#search"><span>Arama Ailesi</span><span class="kbd">8</span></a>
+          <a href="#copygrow"><span>Kopyalama & Grow</span><span class="kbd">9</span></a>
+          <a href="#formatting"><span>NumberFormatting</span><span class="kbd">0</span></a>
+          <a href="#api"><span>Mini API</span><span class="kbd">A</span></a>
+          <a href="#usecases"><span>Kullanım Senaryoları</span><span class="kbd">B</span></a>
+          <a href="#contributing"><span>Katkı</span><span class="kbd">C</span></a>
+          <a href="#license"><span>Lisans</span><span class="kbd">L</span></a>
+        </div>
+
+        <div class="tip"><i>i</i> Kısayol: <span class="kbd">Ctrl</span> + <span class="kbd">F</span> ile arayın.</div>
+      </aside>
+
+      <!-- MAIN -->
+      <main class="card main">
+        <header class="hero" id="overview">
+          <h2>SpanPro / ReadOnlySpanPro</h2>
+          <p>
+            <b>Span kullanmadan</b> yüksek performanslı, güvenli ve esnek bir <b>dilimleme (slicing)</b> kütüphanesi.
+            Tek tip ile <b>Array</b> / <b>String(RO)</b> / <b>Unmanaged</b> bellek arka planlarını kapsar; arama, kopyalama,
+            biçimleme ve metin üretiminde <b>düşük GC</b> ve <b>yüksek hız</b> hedefler.
+          </p>
+
+          <div class="badges">
+            <span class="badge acc">Array / String(RO) / Unmanaged</span>
+            <span class="badge ok">BMH hızlandırmalı arama</span>
+            <span class="badge ok">Karakter-bazlı ToString</span>
+            <span class="badge warn">StringRO yazılamaz</span>
+            <span class="badge acc">MIT License</span>
+          </div>
+
+          <div class="hr"></div>
+          <div class="mini">
+            <span class="pill">Namespace: <b>DSO.Core.SpanPro</b></span>
+            <span class="pill">Tipler: <b>SpanPro&lt;T&gt;</b>, <b>ReadOnlySpanPro&lt;T&gt;</b></span>
+            <span class="pill">Kind: Array · StringRO · Unmanaged</span>
+          </div>
+        </header>
+
+        <section id="why">
+          <h3>Neden SpanPro?</h3>
+          <ul class="list">
+            <li><b>Span’sız performans:</b> <span class="muted">.NET <span class="inline code">Span&lt;T&gt;</span> kullanmadan benzer ergonomi + hız yaklaşımı.</span></li>
+            <li><b>Çoklu backing, tek tip:</b> <span class="muted">owner + start + length + kind modeliyle Array/String(RO)/Unmanaged tek yapı altında.</span></li>
+            <li><b>Özel algoritmalar:</b> <span class="muted">char/byte alt dizi aramalarında BMH (Boyer–Moore–Horspool) ile güçlü hızlanma.</span></li>
+            <li><b>GC-dostu:</b> <span class="muted">ArrayPool, stackalloc ve iki-geçişli yazım; ara tahsisatlardan kaçınır.</span></li>
+            <li><b>Deterministik kimlik:</b> <span class="muted">Equals/GetHashCode → owner + start + length + kind.</span></li>
+          </ul>
+        </section>
+
+        <section id="features">
+          <h3>Öne Çıkan Özellikler</h3>
+          <div class="cols">
+            <div class="callout ok">
+              <b>Birleşik model</b><br/>
+              <span class="muted"><code>SpanPro&lt;T&gt;</code> (yazılabilir) ve <code>ReadOnlySpanPro&lt;T&gt;</code> (salt okunur).</span>
+            </div>
+            <div class="callout ok">
+              <b>Arama ailesi</b><br/>
+              <span class="muted"><code>IndexOf</code>, <code>LastIndexOf</code>, <code>FindFirst/Last</code>, <code>FindAll</code> (+ BMH).</span>
+            </div>
+            <div class="callout">
+              <b>Kopyalama</b><br/>
+              <span class="muted"><code>CopyTo</code>, <code>TryCopyTo</code>, overlap-safe <code>DsMemoryCopySP</code>.</span>
+            </div>
+            <div class="callout">
+              <b>Metin üretimi</b><br/>
+              <span class="muted"><code>ToString(start,len)</code> tüm T’lerde <b>karakter bazlı</b> semantik.</span>
+            </div>
+            <div class="callout">
+              <b>Doldurma & Temizleme</b><br/>
+              <span class="muted"><code>Fill</code>, <code>Clear</code> — write-barrier kurallarına uygun.</span>
+            </div>
+            <div class="callout">
+              <b>NumberFormatting</b><br/>
+              <span class="muted">Tek buffer + <code>TryFormat</code> ile <b>GC-free</b> yazım.</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="architecture">
+          <h3>Mimari</h3>
+          <p class="muted">
+            SpanPro, “span benzeri” bir görünümü <b>owner + start + length + kind</b> modeliyle taşır. Erişim sırasında
+            kalıcı pointer tutmak yerine <code class="inline">ItemRef / ItemRefRO</code> ile gerekli ref/pointer <b>anlık</b> hesaplanır.
+          </p>
+
+          <ul class="list">
+            <li><b>Array:</b> <span class="muted">yazılabilir / salt okunur yollar.</span></li>
+            <li><b>StringRO:</b> <span class="muted">salt okunur; yazma denemesi exception.</span></li>
+            <li><b>Unmanaged:</b> <span class="muted"><code>IRawMemoryOwner</code> üzerinden; referans içeren T yasak.</span></li>
+          </ul>
+
+          <div class="callout">
+            <b>Raw memory sahipliği</b><br/>
+            <span class="muted">
+              Repo içinde unmanaged/pinli bellek için basit sahiplik modeli bulunur: <code>IRawMemoryOwner</code>,
+              <code>PinnedArrayOwner</code> ve <code>UnmanagedOwner</code>.
+            </span>
+          </div>
+        </section>
+
+        <section id="safety">
+          <h3>Semantik & Güvenlik</h3>
+          <ul class="list">
+            <li><b>String arkasına yazma yasak:</b> <span class="muted"><code>StringRO</code> backing’de <code>ItemRef</code> çağrısı <code>InvalidOperationException</code> üretir.</span></li>
+            <li><b>Unmanaged + referans içeren T yasak:</b> <span class="muted">GC taramadığı için <code>NotSupportedException</code>.</span></li>
+            <li><b>Out-of-range:</b> <span class="muted">ArgumentOutOfRangeException (slice/kopyalama/erişim).</span></li>
+            <li><b>Eşitlik:</b> <span class="muted">owner + start + length + kind aynıysa eşit.</span></li>
+          </ul>
+
+          <div class="callout warn">
+            <b>Not:</b> Unmanaged kullanımında <code>IRawMemoryOwner</code> yaşam döngüsü çok kritiktir.
+            Owner dispose edildikten sonra span görünümünü kullanmayın.
+          </div>
+        </section>
+
+        <section id="tostring">
+          <h3>ToString — Karakter Bazlı Semantik</h3>
+          <p class="muted">
+            <code class="inline">ToString(int start, int length)</code> tüm türlerde “eleman sayısı” değil “<b>toplam karakter akışı</b>” üzerinden dilimler.
+          </p>
+
+          <ul class="list">
+            <li><b>T == char:</b> <span class="muted">start/length zaten karakterdir (array’de hızlı yol: <code>new string(char[], start, length)</code>).</span></li>
+            <li><b>T == string:</b> <span class="muted">string[] parçaları tek bir metinmiş gibi düşünülür, sonra karakter aralığı uygulanır.</span></li>
+            <li><b>Diğer T:</b> <span class="muted">her eleman yazıya çevrilir (önce <code>ISpanFormattable.TryFormat</code>, olmazsa <code>ToString()</code>), sonra karakter aralığı uygulanır.</span></li>
+            <li><b>Kültür:</b> <span class="muted">varsayılan <code>CultureInfo.CurrentCulture</code>.</span></li>
+          </ul>
+
+          <pre><code>// Örnekler
+// long[] { 1, 23, 456 }  -> ToString(0,6)  == "123456"
+// string[] { "abc", "def", "g" } -> ToString(2,4) == "cdef"</code></pre>
+        </section>
+
+        <section id="quickstart">
+          <h3>Hızlı Başlangıç</h3>
+
+          <pre><code class="language-csharp">using DSO.Core.SpanPro;
+
+// 1) Dizi ile başla
+var arr = new int[] { 10, 20, 30, 40, 50 };
+var sp  = SpanPro&lt;int&gt;.FromArray(arr);         // yazılabilir
+var ro  = ReadOnlySpanPro&lt;int&gt;.FromArray(arr); // salt okunur
+
+// Dilimleme & yazma
+var mid = sp.Slice(1, 3); // [20,30,40]
+mid.Fill(99);             // arr => {10, 99, 99, 99, 50}
+
+// Arama
+int ix = ro.IndexOf(99, 0);
+int lx = ro.LastIndexOf(99);
+var all = ro.FindAll(99, 0); // {1,2,3}</code></pre>
+
+          <pre><code class="language-csharp">// String (RO) üzerinde alt dizi arama + slicing + ToString
+var s   = "lorem ipsum lorem";
+var rs  = ReadOnlySpanPro&lt;char&gt;.FromString(s);
+var pat = ReadOnlySpanPro&lt;char&gt;.FromString("ipsum");
+
+int where = rs.IndexOf(pat, 0);            // BMH destekli
+string cut = rs.Slice(where, 5).ToString(0, 5); // "ipsum"</code></pre>
+
+          <pre><code class="language-csharp">// Unmanaged örneği
+using var um = new UnmanagedOwner&lt;byte&gt;(1024);
+var ub = SpanPro&lt;byte&gt;.FromUnmanagedOwner(um, 0, 1024);
+
+ub.Fill(0x20);
+ub.ItemRef(100) = 0x2A;
+
+int pos = ub.IndexOf((byte)0x2A, 0);
+
+var dst = new byte[1024];
+ub.CopyTo(dst, 0);</code></pre>
+
+          <div class="callout">
+            <b>Kurulum (önerilen)</b><br/>
+            <span class="muted">
+              Bu repo şu an “source-first” kullanıma uygundur: projene <b>Project Reference</b> olarak ekleyebilir
+              veya kaynakları doğrudan dahil edebilirsin. (Repo sayfasında release/NuGet bilgisi görünmüyor.)
+            </span>
+          </div>
+        </section>
+
+        <section id="search">
+          <h3>Arama Ailesi</h3>
+          <ul class="list">
+            <li><b>Tek değer:</b> <span class="muted"><code>IndexOf(value, start)</code>, <code>LastIndexOf(value)</code></span></li>
+            <li><b>Alt dizi:</b> <span class="muted"><code>IndexOf(pattern, start)</code>, <code>LastIndexOf(pattern, end)</code></span></li>
+            <li><b>İlk/Son:</b> <span class="muted"><code>FindFirst</code>, <code>FindLast</code></span></li>
+            <li><b>Çoklu:</b> <span class="muted"><code>FindAll(value, start)</code> → int[] (ArrayPool ile büyütmeli)</span></li>
+            <li><b>BMH:</b> <span class="muted">char/byte için uzun patternlerde agresif hızlanma</span></li>
+          </ul>
+
+          <div class="callout ok">
+            <b>Performans ipucu</b><br/>
+            <span class="muted">Sıcak döngülerde kind dallanması minimize edilmiştir; Array/Unmanaged yollarında ref/pointer ile ilerleme hedeflenir.</span>
+          </div>
+        </section>
+
+        <section id="copygrow">
+          <h3>Kopyalama & Grow</h3>
+          <ul class="list">
+            <li><b>CopyTo:</b> <span class="muted">aynı owner’da Array.Copy / Buffer.MemoryCopy hızlı yolları.</span></li>
+            <li><b>DsMemoryCopySP:</b> <span class="muted">overlap-safe, write-barrier uyumlu genel kopya yolu.</span></li>
+            <li><b>Grow:</b> <span class="muted">ArrayPool ile kapasite artırma yaklaşımı (mantıksal uzunluk vs kapasite notlarını takip edin).</span></li>
+          </ul>
+
+          <div class="callout warn">
+            <b>Grow notu:</b> Eğer “Length == kapasite” davranışı kullanılıyorsa, API’yi tüketen kodda “mantıksal uzunluk”
+            bilgisini ayrıca yönetmek gerekebilir. (Özellikle buffer builder senaryolarında.)
+          </div>
+        </section>
+
+        <section id="formatting">
+          <h3>NumberFormatting (GC-free yazım)</h3>
+          <p class="muted">
+            Sayıları ara string oluşturmadan hedef <code class="inline">SpanPro&lt;char&gt;</code> üzerine yazmak için
+            <code class="inline">NumberFormatting</code> yardımcıları bulunur.
+            Alt tarafta minimal örnek:
+          </p>
+
+          <pre><code class="language-csharp">var buf = new char[64];
+var txt = SpanPro&lt;char&gt;.FromArray(buf);
+
+int w = 0;
+w += NumberFormatting.FormatInt64(ref txt, w, -12345,
+     NumberFormatSlim.FromSeparators(',', '-'));
+
+w += NumberFormatting.FormatDouble(ref txt, w, 3.14159,
+     NumberFormatSlim.Invariant, "F3");
+
+string sOut = txt.ToString(0, w); // "-12,3453.142"</code></pre>
+
+          <div class="callout">
+            <span class="muted">
+              <b>Not:</b> Format işlemleri içeride <code>TryFormat</code> + <code>stackalloc</code> geçici buffer kullanır,
+              ardından hedefe kopyalar; amaç GC baskısını düşürmektir.
+            </span>
+          </div>
+        </section>
+
+        <section id="api">
+          <h3>Mini API Kılavuzu</h3>
+
+          <pre><code class="language-csharp">// Oluşturma
+SpanPro&lt;T&gt;.FromArray(T[] arr, int start = 0, int length = arr.Length)
+ReadOnlySpanPro&lt;T&gt;.FromArray(T[] arr, int start = 0, int length = arr.Length)
+ReadOnlySpanPro&lt;char&gt;.FromString(string s, int start = 0, int length = s.Length)
+SpanPro&lt;T&gt;.FromUnmanagedOwner(IRawMemoryOwner&lt;T&gt; owner, int start, int length)
+
+// Erişim
+ref T            ItemRef(int index);      // yazılabilir (StringRO'da exception)
+ref readonly T   ItemRefRO(int index);    // salt okunur
+
+// Kullanışlılar
+Slice(int start, int length)
+ToArray(int start, int length, bool isRemoveNull = false)
+CopyTo(T[] destination, int destStart)
+Fill(value) / Clear()
+IndexOf / LastIndexOf / FindAll / IndexOf(pattern)
+ToString(int start, int length) // tüm türlerde karakter bazlı</code></pre>
+
+          <div class="callout ok">
+            <b>Extension’lar</b><br/>
+            <span class="muted">
+              Repo içinde <code>SpanPro.Extensions</code> ile pratik yardımcılar bulunur:
+              örn. string’i yazılabilir char[] kopyasına çeviren <code>AsSpanProMutable</code> ve trim yardımcıları.
+            </span>
+          </div>
+        </section>
+
+        <section id="usecases">
+          <h3>Kullanım Senaryoları</h3>
+          <ul class="list">
+            <li><b>Parser / tokenizer:</b> <span class="muted">slicing + arama + düşük tahsisat.</span></li>
+            <li><b>Metin üretimi:</b> <span class="muted">karakter-bazlı ToString ve buffer üstüne yazım.</span></li>
+            <li><b>Binary protokol işleme:</b> <span class="muted">unmanaged buffer + hızlı arama/kopyalama.</span></li>
+            <li><b>String üzerinde güvenli okuma:</b> <span class="muted">ReadOnlySpanPro&lt;char&gt; ile string backing.</span></li>
+          </ul>
+
+          <div class="callout">
+            <b>Memory/Span ile fark</b><br/>
+            <span class="muted">
+              BCL’in Memory/Span ekosistemine doğrudan bağlanmak yerine, Span’sız aynı problemi çözmeye odaklanır;
+              özellikle string backing ve kütüphane içi BMH/overlap-safe copy gibi özelleştirmeler öne çıkar.
+            </span>
+          </div>
+        </section>
+
+        <section id="contributing">
+          <h3>Katkı Rehberi</h3>
+          <div class="cols">
+            <div class="callout ok">
+              <b>1) Issue açın</b><br/>
+              <span class="muted">Bug / performans / API önerisi için kısa bir örnek ve beklenti ekleyin.</span>
+            </div>
+            <div class="callout ok">
+              <b>2) PR gönderin</b><br/>
+              <span class="muted">Net açıklama, küçük ve odaklı commit’ler. Gerekirse benchmark çıktısı ekleyin.</span>
+            </div>
+          </div>
+
+          <div class="callout warn">
+            <b>Performans değişiklikleri:</b> Arama/kopyalama gibi sıcak kodlarda PR’larda basit benchmark karşılaştırması
+            (ör. BenchmarkDotNet) paylaşmanız değerlendirmeyi hızlandırır.
+          </div>
+        </section>
+
+        <section id="license">
+          <h3>Lisans</h3>
+          <p class="muted">
+            Bu proje <b>MIT</b> lisansı ile sunulur. Detaylar için repodaki LICENSE dosyasına bakın.
+          </p>
+        </section>
+
+        <div class="footer">
+          <div>
+            <b>DSO.Core.SpanPro</b> — DokuzSistem Open Server ekosistemi
+            <div style="margin-top:6px" class="muted">
+              Bu sayfa GitHub Pages için tek dosya (<code class="inline">index.html</code>) olarak tasarlandı.
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <a class="btn" href="#overview" style="text-decoration:none"><span class="dot" aria-hidden="true"></span>Yukarı</a>
+            <a class="btn secondary" href="https://github.com/DSOpenServer/DSO.Core.SpanPro" target="_blank" rel="noopener" style="text-decoration:none">
+              <span class="dot" aria-hidden="true"></span>GitHub
+            </a>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Mobile menu toggle
+    (function(){
+      const side = document.getElementById('side');
+      const btn  = document.getElementById('menuBtn');
+      if(btn){
+        btn.addEventListener('click', () => side.classList.toggle('open'));
+      }
+    })();
+
+    // Active link on scroll
+    (function(){
+      const links = Array.from(document.querySelectorAll('#nav a'));
+      const sections = links
+        .map(a => document.querySelector(a.getAttribute('href')))
+        .filter(Boolean);
+
+      function setActive(id){
+        links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      }
+
+      const obs = new IntersectionObserver((entries) => {
+        const visible = entries
+          .filter(e => e.isIntersecting)
+          .sort((a,b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if(visible && visible.target && visible.target.id){
+          setActive(visible.target.id);
+        }
+      }, { rootMargin: "-20% 0px -70% 0px", threshold: [0.08, 0.15, 0.25, 0.4] });
+
+      sections.forEach(s => obs.observe(s));
+
+      // Keyboard quick nav (1..0, A, B, C, L)
+      const keyMap = {
+        '1':'overview','2':'why','3':'features','4':'architecture','5':'safety','6':'tostring',
+        '7':'quickstart','8':'search','9':'copygrow','0':'formatting',
+        'a':'api','b':'usecases','c':'contributing','l':'license'
+      };
+      window.addEventListener('keydown', (e) => {
+        if(e.ctrlKey || e.metaKey || e.altKey) return;
+        const k = (e.key || '').toLowerCase();
+        if(keyMap[k]){
+          const el = document.getElementById(keyMap[k]);
+          if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
